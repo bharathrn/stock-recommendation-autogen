@@ -2,6 +2,18 @@
 from autogen import AssistantAgent, UserProxyAgent
 from autogen_ext.models.ollama import OllamaChatCompletionClient
 import yfinance as yf
+from autogen import GroupChat, GroupChatManager
+
+
+llm_config = {
+        "config_list": [
+            {
+                "model": "qwen3:1.7b",
+                "base_url": "http://localhost:11434/v1",  # Ollama OpenAI-compatible endpoint
+                "api_key": "NA",  # Ollama ignores this, but required by schema
+            }
+        ]
+    }
 
 ########################################
 # 1. Define Tool Functions
@@ -32,15 +44,7 @@ ollama_client = OllamaChatCompletionClient(model="qwen3:1.7b")
 # Strategy agent (LLM)
 strategy_agent = AssistantAgent(
     name="strategy_agent",
-    llm_config={
-        "config_list": [
-            {
-                "model": "qwen3:1.7b",
-                "base_url": "http://localhost:11434/v1",  # Ollama OpenAI-compatible endpoint
-                "api_key": "NA",  # Ollama ignores this, but required by schema
-            }
-        ]
-    },
+    llm_config=llm_config,
     system_message="""You are a stock strategy expert.
     - Ask other agents for data, news, or sentiment when needed.
     - Provide a clear buy/hold/sell recommendation.
@@ -80,11 +84,23 @@ orchestrator = UserProxyAgent(name="orchestrator",
 # 3. Run Orchestration
 ########################################
 if __name__ == "__main__":
-    ticker = "INTC"
-    query = f"What should I do with {ticker} stock?"
+    # ticker = "INTC"
+    # query = f"What should I do with {ticker} stock?"
 
-    orchestrator.initiate_chat(
-        strategy_agent,
-        max_turns = 2,
-        message=f"Analyze {ticker} and give me a recommendation. You can ask news_agent, data_agent, and sentiment_agent for help."
+    # orchestrator.initiate_chat(
+    #     strategy_agent,
+    #     max_turns = 2,
+    #     message=f"Analyze {ticker} and give me a recommendation. You can ask news_agent, data_agent, and sentiment_agent for help."
+    # )
+
+    ########################################
+    # 4. Group Chat Manager (Optional)
+    ########################################
+
+    groupchat = GroupChat(
+        agents=[orchestrator, strategy_agent, news_agent, data_agent, sentiment_agent],
+        messages=[],
+        max_round=2
     )
+    manager = GroupChatManager(groupchat=groupchat, llm_config=llm_config)
+    orchestrator.initiate_chat(manager, message="Analyze INTC and give me a recommendation.")
