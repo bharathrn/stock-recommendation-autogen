@@ -1,13 +1,9 @@
-from autogen import AssistantAgent
 from services.news import fetch_news
 
-def build_news_agent():
-    agent =  AssistantAgent(
-        name='NewsAgent',
-        system_message=(
-            'You fetch latest financial and company-related news. '
-            'Only return concise JSON with keys: title, source, date, url, snippet.'
-        )
-    )
-    agent.register_for_execution(fetch_news)
-    return agent
+class NewsAgent:
+    def __init__(self):
+        self.name = "NewsAgent"
+
+    def invoke(self, query: str, region: str = "IN", max_results: int = 10):
+        news = fetch_news(query, region=region, max_results=max_results)
+        return news

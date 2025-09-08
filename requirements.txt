@@ -4,9 +4,7 @@ pandas>=2.2.0
 numpy>=1.26.0
 duckduckgo_search>=5.3.1
 transformers>=4.43.0
-# torch left unpinned — install the appropriate wheel for your Python/OS:
-# For stable CPU builds on Windows (Python 3.11/3.12) install via:
-# pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch
 pydantic>=2.8.0
 python-dotenv>=1.0.0
 tenacity>=8.0.0

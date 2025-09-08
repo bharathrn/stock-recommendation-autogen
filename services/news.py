@@ -1,4 +1,4 @@
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 from typing import List, Dict
 from tenacity import retry, stop_after_attempt, wait_fixed
 from loguru import logger

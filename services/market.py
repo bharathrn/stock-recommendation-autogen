@@ -19,11 +19,12 @@ def fetch_history(ticker: str, days: int = 180) -> pd.DataFrame:
 def compute_features(df: pd.DataFrame) -> dict:
     close = df['Close']
     feat = {}
-    feat['last_price'] = float(close.iloc[-1])
-    feat['sma_20'] = float(sma(close, 20).iloc[-1])
-    feat['sma_50'] = float(sma(close, 50).iloc[-1]) if len(close) >= 50 else None
-    feat['rsi_14'] = float(rsi(close, 14).iloc[-1])
+    feat['last_price'] = float(close.iloc[-1].item())
+    feat['sma_20'] = float(sma(close, 20).iloc[-1].item())
+    feat['sma_50'] = float(sma(close, 50).iloc[-1].item()) if len(close) >= 50 else None
+    feat['rsi_14'] = float(rsi(close, 14).iloc[-1].item())
     feat['ann_vol'] = float(annualized_volatility(close))
+
     dd = drawdown_stats(close)
     feat.update(dd)
     for d in (5,20,60,120):

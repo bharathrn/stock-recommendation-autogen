@@ -1,16 +1,10 @@
-from autogen import AssistantAgent
 from services.market import fetch_history, compute_features
 
-def build_data_agent():
-    agent = AssistantAgent(
-        name='DataAgent',
-        system_message=(
-            'You retrieve market data and compute technical indicators. '
-            'Use the provided tools and return concise JSON.'
-        )
-    )
+class DataAgent:
+    def __init__(self):
+        self.name = "DataAgent"
 
-    agent.register_for_execution(fetch_history)
-    agent.register_for_execution(compute_features)
-    return agent
-
+    def invoke(self, ticker: str):
+        df = fetch_history(ticker)
+        features = compute_features(df)
+        return features

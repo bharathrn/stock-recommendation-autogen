@@ -1,41 +1,40 @@
 import os
-
-USE_OLLAMA = os.getenv("USE_OLLAMA", "False").lower() in ["true", "1", "yes"]
-
-if USE_OLLAMA:
-    from langchain_ollama import ChatOllama
-    llm = ChatOllama(
-        model=os.getenv("OLLAMA_MODEL", "qwen/qwen-1.5b"),
-        host=os.getenv("OLLAMA_HOST", "http://localhost:11434")
-    )
+import asyncio
+from autogen_core.models import UserMessage
+from autogen_ext.models.ollama import OllamaChatCompletionClient
 
 class StrategyAgent:
     def __init__(self):
         self.name = "StrategyAgent"
+        self.client = OllamaChatCompletionClient(
+            model=os.getenv("OLLAMA_MODEL", "qwen3:1.7b")
+        )
         self.system_prompt = (
             "You are a financial strategy assistant. "
-            "Given stock data, news, and sentiment, provide a concise "
-            "recommendation and reasoning for short-term trading decisions."
+            "Given stock market features, news headlines, and sentiment scores, "
+            "provide a concise Buy/Hold/Sell recommendation with reasoning."
         )
 
-        if not USE_OLLAMA:
-            from autogen.agentchat import AssistantAgent
-            self.agent = AssistantAgent(
-                name=self.name,
-                system_message=self.system_prompt
-            )
-
-    def analyze(self, ticker, news_summary="", sentiment_summary="", market_data=""):
+    def invoke(self, ticker, news_summary, sentiment_summary, market_data):
         prompt = (
             f"{self.system_prompt}\n"
             f"Ticker: {ticker}\n"
             f"News: {news_summary}\n"
             f"Sentiment: {sentiment_summary}\n"
             f"Market Data: {market_data}\n"
-            "Provide a trading recommendation (Buy/Hold/Sell) with reasoning."
+            "Provide a clear recommendation and reasoning."
         )
+        return asyncio.run(self._call_ollama(prompt))
 
-        if USE_OLLAMA:
-            return llm.invoke(prompt)
+    async def _call_ollama(self, prompt: str) -> str:
+        response = await self.client.create([
+            UserMessage(content=prompt, source="user")
+        ])
+        # FIX: no output_text, use message.content
+        if hasattr(response, "message") and response.message:
+            return response.message.content
+        elif hasattr(response, "messages"):
+            return "".join([m.content for m in response.messages if m.content])
         else:
-            return self.agent.invoke(prompt)
+            return str(response)
+
